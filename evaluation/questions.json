@@ -1,0 +1,62 @@
+[
+    {
+        "question": "How do I count vibration events using an SW-420 sensor?",
+        "expected_header": "### PATTERN: vibration_event_counter"
+    },
+    {
+        "question": "How do I take a single distance measurement from an HC-SR04 ultrasonic sensor?",
+        "expected_header": "### PATTERN: single_distance_read"
+    },
+    {
+        "question": "How can I print an alert whenever an object comes closer than 30 cm to my ultrasonic sensor?",
+        "expected_header": "### PATTERN: proximity_alert"
+    },
+    {
+        "question": "How do I measure the liquid level in a container using an ultrasonic sensor?",
+        "expected_header": "### PATTERN: liquid_level"
+    },
+    {
+        "question": "How do I get a smoothed distance reading by averaging several ultrasonic samples?",
+        "expected_header": "### PATTERN: averaged_distance"
+    },
+    {
+        "question": "How do I log ultrasonic distance readings to a file with timestamps?",
+        "expected_header": "### PATTERN: distance_file_logger"
+    },
+    {
+        "question": "How do I record PIR motion events to a log file on my Raspberry Pi?",
+        "expected_header": "### PATTERN: motion_event_file_logger"
+    },
+    {
+        "question": "How do I print each PIR motion detection to the console with a timestamp?",
+        "expected_header": "### PATTERN: motion_console_logger"
+    },
+    {
+        "question": "How do I log every time an IR obstacle avoidance sensor detects something?",
+        "expected_header": "### PATTERN: obstacle_event_logger"
+    },
+    {
+        "question": "How do I measure the RPM of a spinning wheel using a slotted IR encoder sensor?",
+        "expected_header": "### PATTERN: rpm_measurement"
+    },
+    {
+        "question": "How do I use two infrared sensors to follow a line with a robot?",
+        "expected_header": "### PATTERN: line_detection"
+    },
+    {
+        "question": "How do I make an LED smoothly fade in and out using PWM with gpiozero?",
+        "expected_header": "### PATTERN: led_fade"
+    },
+    {
+        "question": "How do I move a servo motor to its minimum, center, and maximum positions?",
+        "expected_header": "### PATTERN: servo_positions"
+    },
+    {
+        "question": "How do I count button presses on a GPIO pin that uses an internal pull-up resistor?",
+        "expected_header": "### PATTERN: count_events_pullup"
+    },
+    {
+        "question": "How do I control an active-low relay module with gpiozero?",
+        "expected_header": "### PATTERN: relay_active_low"
+    }
+]
