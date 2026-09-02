@@ -10,6 +10,7 @@ CHUNKS_PATH = VECTOR_STORE_DIR / "saved_chunks.json"
 
 EVALUATION_DIR = Path(__file__).resolve().parent / "evaluation"
 QUESTIONS_PATH = EVALUATION_DIR / "questions.json"
+RESULT_EVALUATION_PATH = EVALUATION_DIR / "results.md"
 
 CHUNK_SIZE = 500
 CHUNK_OVERLAP = 50

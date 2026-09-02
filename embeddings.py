@@ -7,12 +7,23 @@ def get_chunks():
     chunks = build_chunks(data_path=DATA_DIR, chunk_size=CHUNK_SIZE, chunk_overlap=CHUNK_OVERLAP)
     return chunks
 
+def prepare_embedding_text(chunk):
+    # Experiment: Humanized pattern 
+    header = chunk["header"]
+    text = chunk["text"]
+    
+    if header.startswith("### PATTERN:"):
+        human_readable = header.replace("### PATTERN:", "").replace("_", " ").strip()
+        return f"{human_readable}\n{header}\n{header}\n{text}"
+    else:
+        return f"{header}\n{header}\n{text}"
+
 def embedding_chunks():
     chunks = get_chunks()
     texts_to_embed = []
     for text in chunks:
         texts_to_embed.append(
-            text["header"] + "\n" + text["text"]
+            text["header"] + "\n" + text["header"] + "\n" + text["text"]
         )
     embedded_text = model.encode(texts_to_embed, normalize_embeddings=True)
     return chunks, embedded_text
@@ -34,7 +45,7 @@ def manual_retriever(chunks:list[dict[str, str]], embeddings, question:str, k:in
             "header": chunk["header"],
             "text": chunk["text"],
         })
-    return results
+    return results  
 
 def main():
     chunks, embeddings = embedding_chunks()
