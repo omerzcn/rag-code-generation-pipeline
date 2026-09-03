@@ -1,17 +1,26 @@
-import sys
-from pathlib import Path
-
-sys.path.append(str(Path(__file__).resolve().parent.parent))
-from config import CHUNKS_PATH, FAISS_INDEX_PATH, OLLAMA_MODEL
+from config import CHUNKS_PATH, FAISS_INDEX_PATH
 from vector_store import loading_chunks, loading_faiss, faiss_retriever
-
-import ollama
+from llm import generate_local, generate_api
 
 def build_context(results):
-    context_parts = []
+    machine_patterns = []
+    human_patterns = []
+    other_chunks = []
     for r in results:
-        formatted_chunk = f"{r["header"]}\n{r["text"]}"
-        context_parts.append(formatted_chunk)
+        if r["header"].startswith("### PATTERN:"):
+            formatted_machine = f"{r['header']}\n{r['text']}"
+            machine_patterns.append(formatted_machine)
+        elif r["header"].startswith("### PATTERN "):
+            formatted_human = f"{r['header']}\n{r['text']}"
+            human_patterns.append(formatted_human)
+        else:
+            formatted_chunk = f"{r['header']}\n{r['text']}"
+            other_chunks.append(formatted_chunk)
+
+    if machine_patterns:
+        context_parts = machine_patterns + other_chunks
+    else:
+        context_parts = human_patterns + other_chunks
     return "\n\n".join(context_parts)
 
 def build_prompt(question, context):
@@ -31,7 +40,6 @@ def build_prompt(question, context):
     Never replace placeholders with example values.
     - If the context contains a machine-readable pattern whose header starts
     with "### PATTERN:", treat that pattern as authoritative.
-    - Copy its code structure faithfully.
     - Human-readable "PATTERN 1", "PATTERN 2", etc. sections are explanatory
     reference only and must not override the machine-readable pattern.
     - Keep lines under 80 characters.
@@ -40,11 +48,11 @@ def build_prompt(question, context):
     retrieved context.
     - Do not add general knowledge, extra advice, assumptions, or explanations
     from memory.
-    - If the retrieved context contains a reviewed pattern, reproduce that
-    pattern faithfully instead of expanding it.
-    - If the authoritative machine-readable pattern contains a placeholder,
-    preserve that placeholder exactly, even if explanatory sections contain
-    example values for the same field.
+    - Follow the structure of the authoritative pattern faithfully, but do not
+    include unrelated operations from the pattern.
+    - Use the authoritative machine-readable pattern as the source of truth,
+    but include only the parts required to answer the user's request.
+    - Do not introduce code that is not present in that pattern.
 
     Use the context below to answer the question.
     Do not invent information that is not supported by the context.
@@ -60,25 +68,12 @@ def build_prompt(question, context):
 """
     return prompt
 
-def generate_local(prompt):
-    response = ollama.chat(
-    model=OLLAMA_MODEL, 
-    messages=[
-        {
-            "role": "user",
-            "content": prompt,
-        }
-    ]
-    )
-
-    return response['message']['content']
-
 def main():
     loaded_chunks = loading_chunks(file_path=CHUNKS_PATH)
 
     loaded_faiss = loading_faiss(file_path=FAISS_INDEX_PATH)
 
-    question = "How do I count vibration events using an SW-420 sensor?"
+    question = "How do I move a servo motor to the center position?"
 
     results = faiss_retriever(chunks=loaded_chunks, faiss_index=loaded_faiss, question=question, k=5)
 
@@ -86,9 +81,8 @@ def main():
 
     prompt = build_prompt(question=question, context=context)
 
-    answer = generate_local(prompt)
+    answer = generate_api(prompt)
     print(answer)
 
 if __name__ == "__main__":
     main()
-
