@@ -1,0 +1,165 @@
+[
+    {
+        "question": "How do I count vibration events using an SW-420 sensor?",
+        "expected_header": "### PATTERN: vibration_event_counter",
+        "required_code": [
+            "from gpiozero import InputDevice",
+            "from time import sleep",
+            "sensor = InputDevice({{pin}}, pull_up=None, active_state=False)"
+        ],
+        "placeholders": [
+            "{{pin}}"
+        ],
+        "forbidden_code": [
+            "RPi.GPIO"
+        ]
+    },
+    {
+        "question": "How do I take a single distance measurement from an HC-SR04 ultrasonic sensor?",
+        "expected_header": "### PATTERN: single_distance_read",
+        "required_code": [
+            "from gpiozero import DistanceSensor",
+            "from time import sleep",
+            "sensor = DistanceSensor(echo={{echo}}, trigger={{trig}}, max_distance=4)"
+        ],
+        "placeholders": [
+            "{{echo}}",
+            "{{trig}}"
+        ],
+        "forbidden_code": [
+            "RPi.GPIO"
+        ]
+    },
+    {
+        "question": "How do I record PIR motion events to a log file on my Raspberry Pi?",
+        "expected_header": "### PATTERN: motion_event_file_logger",
+        "required_code": [
+            "from gpiozero import InputDevice",
+            "from time import sleep",
+            "import datetime",
+            "sensor = InputDevice({{pin}}, pull_up=None, active_state=True)" 
+        ],
+        "placeholders": [
+            "{{pin}}",
+            "{{logfile}}"
+        ],
+        "forbidden_code": [
+            "RPi.GPIO"
+        ]
+    },
+    {
+        "question": "How do I count button presses on a GPIO pin that uses an internal pull-up resistor?",
+        "expected_header": "### PATTERN: count_events_pullup",
+        "required_code": [
+            "from gpiozero import InputDevice",
+            "from time import sleep",
+            "sensor = InputDevice({{pin}}, pull_up=True)"
+        ],
+        "placeholders": [
+            "{{pin}}"
+        ],
+        "forbidden_code": [
+            "RPi.GPIO"
+        ]
+    },
+    {
+        "question": "How do I control an active-low relay module with gpiozero?",
+        "expected_header": "### PATTERN: relay_active_low",
+        "required_code": [
+            "from gpiozero import OutputDevice",
+            "from time import sleep",
+            "relay = OutputDevice({{pin}}, active_high=False)",
+            "relay.on()",
+            "relay.off()"
+        ],
+        "placeholders": [
+            "{{pin}}"
+        ],
+        "forbidden_code": [
+            "RPi.GPIO"
+        ]
+    },
+    {
+        "question": "How do I move a servo motor to its minimum, center, and maximum positions?",
+        "expected_header": "### PATTERN: servo_positions",
+        "required_code": [
+            "from gpiozero import Servo",
+            "from time import sleep",
+            "servo = Servo({{pin}})",
+            "servo.mid()",
+            "servo.min()",
+            "servo.max()",
+            "servo.detach()"
+        ],
+        "placeholders": [
+            "{{pin}}"
+        ],
+        "forbidden_code": [
+            "RPi.GPIO"
+        ]
+    },
+    {
+        "question": "How do I connect to an RTSP IP camera and save one snapshot?",
+        "expected_header": "### PATTERN: camera_test_snapshot",
+        "required_code": [
+            "import cv2",
+            "RTSP_URL = \"{{rtsp_url}}\"",
+            "cap = cv2.VideoCapture(RTSP_URL)",
+            "ret, frame = cap.read()",
+            "cv2.imwrite(\"snapshot.jpg\", frame)",
+            "cap.release()"
+        ],
+        "placeholders": [
+            "{{rtsp_url}}"
+        ],
+        "forbidden_code": [
+            "RPi.GPIO"
+        ]
+    },
+    {
+        "question": "How do I subscribe to an MQTT topic and print received messages?",
+        "expected_header": "### PATTERN: subscribe_read",
+        "required_code": [
+            "import paho.mqtt.client as mqtt",
+            "BROKER = \"localhost\"",
+            "PORT = 1883",
+            "TOPIC = \"{{topic}}\"",
+            "client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION1)",
+            "client.subscribe(TOPIC)",
+            "payload = msg.payload.decode(\"utf-8\")",
+            "client.loop_forever()"
+        ],
+        "placeholders": [
+            "{{topic}}"
+        ],
+        "forbidden_code": [
+            "RPi.GPIO",
+            "gpiozero"
+        ]
+    },
+    {
+        "question": "How do I publish an MQTT control command to a device topic?",
+        "expected_header": "### PATTERN: publish_command",
+        "required_code": [
+            "import paho.mqtt.client as mqtt",
+            "import json",
+            "from time import sleep",
+            "BROKER = \"localhost\"",
+            "PORT = 1883",
+            "TOPIC = \"{{topic}}\"",
+            "payload = {\"state\": \"ON\"}",
+            "client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION1)",
+            "client.loop_start()",
+            "client.publish(TOPIC, payload_str, qos=1)",
+            "client.loop_stop()",
+            "client.disconnect()"
+        ],
+        "placeholders": [
+            "{{topic}}"
+        ],
+        "forbidden_code": [
+            "RPi.GPIO",
+            "gpiozero"
+        ]
+    }
+]

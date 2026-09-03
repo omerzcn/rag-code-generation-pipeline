@@ -68,20 +68,23 @@ def build_prompt(question, context):
 """
     return prompt
 
-def main():
+def generate_rag_answer(question):
     loaded_chunks = loading_chunks(file_path=CHUNKS_PATH)
-
     loaded_faiss = loading_faiss(file_path=FAISS_INDEX_PATH)
-
-    question = "How do I move a servo motor to the center position?"
 
     results = faiss_retriever(chunks=loaded_chunks, faiss_index=loaded_faiss, question=question, k=5)
 
     context = build_context(results=results)
-
     prompt = build_prompt(question=question, context=context)
 
     answer = generate_api(prompt)
+    return answer
+
+def main():
+    question = "How do I move a servo motor to the center position?"
+
+    answer = generate_rag_answer(question=question)
+
     print(answer)
 
 if __name__ == "__main__":
