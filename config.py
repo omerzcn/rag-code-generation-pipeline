@@ -16,3 +16,5 @@ CHUNK_SIZE = 500
 CHUNK_OVERLAP = 50
 
 MODEL_TRANSFORMER = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
+
+OLLAMA_MODEL = "qwen2.5-coder:7b"
