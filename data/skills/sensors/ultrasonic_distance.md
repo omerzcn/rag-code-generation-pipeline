@@ -142,207 +142,47 @@ Reliable readings are between minimum and maximum range.
 
 This sensor uses DistanceSensor, not InputDevice.
 Patterns from base/digital_input.md do not apply here.
-All patterns for this sensor are specific and listed below.
 
-### PATTERN 1 - SINGLE DISTANCE READ
+Use only the reviewed machine-readable patterns defined at the end
+of this skill for executable code.
 
-Use for one-shot distance measurement.
+### TASK TO PATTERN MAP
 
-from gpiozero import DistanceSensor
-from time import sleep
+Pick ONE pattern by matching the task:
 
-TRIG = 23
-ECHO = 24
+- Single distance measurement
+  -> single_distance_read
 
-sensor = DistanceSensor(echo=ECHO,
-                        trigger=TRIG,
-                        max_distance=4)
+- Continuous distance monitoring
+  -> continuous_distance
 
-sleep(0.5)
+- Log distance readings to a file
+  -> distance_file_logger
 
-cm = round(sensor.distance * 100, 1)
-print("Distance: " + str(cm) + " cm")
+- Alert when an object is closer than a threshold
+  -> proximity_alert
 
-Note:
+- Trigger an output when an object is within range
+  -> proximity_output
 
-Add sleep(0.5) after creating DistanceSensor.
-The sensor needs a short settling time before first reliable reading.
+- Measure liquid level
+  -> liquid_level
 
-### PATTERN 2 - CONTINUOUS DISTANCE MONITORING
+- Average multiple readings to reduce noise
+  -> averaged_distance
 
-Use for ongoing distance measurement loop.
+Do not invent pattern names.
+Use ONLY the machine-readable patterns defined below.
 
-from gpiozero import DistanceSensor
-from time import sleep
+### PATTERN GUIDANCE
 
-TRIG = 23
-ECHO = 24
-INTERVAL = 0.3
+The machine-readable `### PATTERN:` sections at the end of this skill
+are authoritative for executable code.
 
-sensor = DistanceSensor(echo=ECHO,
-                        trigger=TRIG,
-                        max_distance=4)
+Do not generate code from explanatory examples or wiring examples.
 
-print("Distance sensor ready")
-print("Press CTRL+C to stop")
-sleep(0.5)
-
-try:
-    while True:
-        cm = round(sensor.distance * 100, 1)
-        print("Distance: " + str(cm) + " cm")
-        sleep(INTERVAL)
-except KeyboardInterrupt:
-    print("Stopped")
-
-### PATTERN 3 - PROXIMITY THRESHOLD ALERT
-
-Use for triggering an action when object closer than a defined threshold distance.
-
-from gpiozero import DistanceSensor
-from time import sleep
-
-TRIG = 23
-ECHO = 24
-THRESHOLD_CM = 30.0
-INTERVAL = 0.1
-
-sensor = DistanceSensor(echo=ECHO,
-                        trigger=TRIG,
-                        max_distance=4)
-
-print("Watching for objects closer than " + str(THRESHOLD_CM) + " cm")
-print("Press CTRL+C to stop")
-sleep(0.5)
-
-try:
-    while True:
-        cm = sensor.distance * 100
-        if cm < THRESHOLD_CM:
-            print("ALERT: " + str(round(cm, 1)) + " cm")
-        else:
-            print("Clear: " + str(round(cm, 1)) + " cm")
-        sleep(INTERVAL)
-except KeyboardInterrupt:
-    print("Stopped")
-
-### PATTERN 4 - PROXIMITY THRESHOLD TRIGGERS OUTPUT
-
-Use for activating an output when object is within range.
-Example: LED or buzzer activates when object is close.
-
-from gpiozero import DistanceSensor, OutputDevice
-from time import sleep
-
-TRIG = 23
-ECHO = 24
-OUT_PIN = 18
-THRESHOLD_CM = 20.0
-INTERVAL = 0.1
-
-sensor = DistanceSensor(echo=ECHO,
-                        trigger=TRIG,
-                        max_distance=4)
-
-output = OutputDevice(OUT_PIN, active_high=True)
-
-print("Proximity output active")
-print("Threshold: " + str(THRESHOLD_CM) + " cm")
-print("Press CTRL+C to stop")
-sleep(0.5)
-
-try:
-    while True:
-        cm = sensor.distance * 100
-        if cm < THRESHOLD_CM:
-            output.on()
-            print("Close: " + str(round(cm, 1)) + " cm")
-        else:
-            output.off()
-        sleep(INTERVAL)
-except KeyboardInterrupt:
-    output.off()
-    print("Stopped")
-
-### PATTERN 5 - LIQUID LEVEL MEASUREMENT
-
-Use for measuring liquid level in an open container.
-Mount sensor above liquid facing downward.
-Measure empty container depth first, then subtract.
-
-from gpiozero import DistanceSensor
-from time import sleep
-
-TRIG = 23
-ECHO = 24
-CONTAINER_DEPTH_CM = 50.0
-INTERVAL = 1.0
-
-sensor = DistanceSensor(echo=ECHO,
-                        trigger=TRIG,
-                        max_distance=4)
-
-print("Level sensor ready")
-print("Container depth: " +
-      str(CONTAINER_DEPTH_CM) + " cm")
-print("Press CTRL+C to stop")
-sleep(0.5)
-
-try:
-    while True:
-        dist = sensor.distance * 100
-        level = CONTAINER_DEPTH_CM - dist
-        if level < 0:
-            level = 0
-        pct = round((level / CONTAINER_DEPTH_CM) * 100, 1)
-        print("Level: " + str(round(level, 1)) +
-              " cm (" + str(pct) + "%)")
-        sleep(INTERVAL)
-except KeyboardInterrupt:
-    print("Stopped")
-
-Note:
-
-JSN-SR04T waterproof probe is better suited for liquid level measurement
-than the open HC-SR04.
-Keep sensor dry. Only the JSN-SR04T probe is waterproof.
-
-### PATTERN 6 - AVERAGED READING (NOISE REDUCTION)
-
-Use when readings are noisy or inconsistent.
-Takes multiple readings and returns the average.
-Useful for slow-changing distances like liquid level.
-
-from gpiozero import DistanceSensor
-from time import sleep
-
-TRIG = 23
-ECHO = 24
-SAMPLES = 5
-INTERVAL = 1.0
-
-sensor = DistanceSensor(echo=ECHO,
-                        trigger=TRIG,
-                        max_distance=4)
-
-print("Averaged distance sensor ready")
-print("Press CTRL+C to stop")
-sleep(0.5)
-
-def read_average(s, n):
-    readings = []
-    for _ in range(n):
-        readings.append(s.distance * 100)
-        sleep(0.05)
-    return sum(readings) / len(readings)
-
-try:
-    while True:
-        avg = round(read_average(sensor, SAMPLES), 1)
-        print("Avg distance: " + str(avg) + " cm")
-        sleep(INTERVAL)
-except KeyboardInterrupt:
-    print("Stopped")
+When GPIO values are not supplied by the user, preserve pattern
+placeholders such as `{{trig}}`, `{{echo}}`, and `{{out_pin}}`.
 
 ### ACCURACY AND LIMITATIONS
 

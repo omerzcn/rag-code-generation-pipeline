@@ -31,23 +31,29 @@ def generate_api(prompt):
                         "content": prompt,
                     }
                 ],
+                "max_tokens": 3000,
             },
-            timeout=60,
+            timeout=(10, 90),
         )
         response.raise_for_status()
         data = response.json()
 
-        if "choices" in data:
-            choices_list = data["choices"]
-            first_choice = choices_list[0]
-            message = first_choice.get("message")
-            content = message.get("content")
-            return content
-        else:
-            return None
+        choices = data.get("choices")
+        if not choices:
+            raise ValueError("No choices returned by OpenRouter")
         
+        message = choices[0].get("message")
+        if not message:
+            raise ValueError("No message returned by OpenRouter")
+
+        content = message.get("content")
+        if not content:
+            raise ValueError("Empty content returned by OpenRouter")
+
+        return content
+    
     except requests.exceptions.RequestException as err:
-        print(f"Request error occured: {err}")
+        raise RuntimeError("OpenRouter request failed: " + str(err)) from err
 
 def main():
     response = generate_api("Say hello in one sentence.")

@@ -62,7 +62,14 @@ def chunk_sections(sections:list[dict[str, str]], chunk_size:int, chunk_overlap:
         current_header = section["header"]
         current_text = section["text"]
 
-        if len(current_text) <= chunk_size:
+        if current_header.startswith("### PATTERN:"):
+            chunks.append({
+                "filename": current_filename,
+                "header": current_header,
+                "text": current_text,
+            })
+
+        elif len(current_text) <= chunk_size:
             chunks.append({
                 "filename": current_filename,
                 "header": current_header,

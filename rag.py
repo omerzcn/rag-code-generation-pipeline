@@ -68,22 +68,61 @@ def build_prompt(question, context):
 """
     return prompt
 
-def generate_rag_answer(question):
+def select_context_candidates(results):
+    machine_patterns = []
+    other_chunks = []
+
+    for result in results:
+        if result["header"].startswith("### PATTERN:"):
+            machine_patterns.append(result)
+        else:
+            other_chunks.append(result)
+    return machine_patterns[:1] + other_chunks[:4]
+
+def select_machine_pattern(results):
+    machine_patterns = []
+    for result in results:
+        if result["header"].startswith("### PATTERN:"):
+            machine_patterns.append(result)
+
+    if machine_patterns:
+        return machine_patterns[0] 
+    return None
+
+def extract_pattern_code(pattern_result):
+    text = pattern_result["text"]
+    code_marker = "### CODE:"
+    start = text.find(code_marker)
+    if start == -1:
+        return None
+    code = text[start + len(code_marker):].strip()
+    return code
+    
+def generate_rag_answer(question, loaded_chunks, loaded_faiss):
+    results = faiss_retriever(chunks=loaded_chunks, faiss_index=loaded_faiss, question=question, k=20)
+
+    # Machine pattern selection
+    selected_pattern = select_machine_pattern(results=results)
+    if selected_pattern is not None:
+        code = extract_pattern_code(pattern_result=selected_pattern)
+        if code is not None:
+            return "```python\n" + code + "\n```"
+
+    # Fallback to let model create, if there was no machine pattern
+    selected_results = select_context_candidates(results=results)
+    context = build_context(results=selected_results)
+
+    prompt = build_prompt(question=question, context=context)
+
+    return generate_local(prompt)
+
+def main():
     loaded_chunks = loading_chunks(file_path=CHUNKS_PATH)
     loaded_faiss = loading_faiss(file_path=FAISS_INDEX_PATH)
 
-    results = faiss_retriever(chunks=loaded_chunks, faiss_index=loaded_faiss, question=question, k=5)
+    question = "How do I take a single distance measurement from an HC-SR04 ultrasonic sensor?"
 
-    context = build_context(results=results)
-    prompt = build_prompt(question=question, context=context)
-
-    answer = generate_api(prompt)
-    return answer
-
-def main():
-    question = "How do I move a servo motor to the center position?"
-
-    answer = generate_rag_answer(question=question)
+    answer = generate_rag_answer(question=question, loaded_chunks=loaded_chunks, loaded_faiss=loaded_faiss)
 
     print(answer)
 

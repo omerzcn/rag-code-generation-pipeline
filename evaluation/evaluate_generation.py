@@ -4,7 +4,9 @@ import json
 import ast
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))
-from config import PATTERN_REQUIREMENTS_PATH
+from config import PATTERN_REQUIREMENTS_PATH, CHUNKS_PATH, FAISS_INDEX_PATH
+
+from vector_store import loading_chunks, loading_faiss
 
 from rag import generate_rag_answer
 
@@ -126,8 +128,42 @@ def check_code_block(code):
         "reason": None,
     }
 
-def evaluate_case(case):
-    generated_code = generate_rag_answer(question=case["question"])
+def evaluate_case(case, loaded_chunks, loaded_faiss):
+    try:
+        generated_code = generate_rag_answer(
+            question=case["question"], loaded_chunks=loaded_chunks, loaded_faiss=loaded_faiss,
+        )
+    except Exception as e:
+        return {
+            "question": case["question"],
+            "generated_code": "",
+            "required_check": {
+                "passed": False,
+                "missing": case["required_code"],
+            },
+            "forbidden_check": {
+                "passed": False,
+                "found_forbidden": [],
+            },
+            "placeholder_check": {
+                "passed": False,
+                "missing_placeholders": case["placeholders"],
+            },
+            "code_block_check": {
+                "passed": False,
+                "reason": "Generation failed",
+            },
+            "syntax_check": {
+                "passed": False,
+                "syntax_error": "Generation failed",
+            },
+            "f_string_check": {
+                "passed": False,
+                "fstring_found": None,
+            },
+            "generation_error": str(e),
+            "passed": False,
+        }
 
     required_check = check_required_code(generated_code=generated_code, required_code=case["required_code"])
     forbidden_check = check_forbidden_code(generated_code=generated_code, forbidden_code=case["forbidden_code"])
@@ -183,11 +219,15 @@ def evaluate_case(case):
 
 def main():
     cases = load_evaluation_cases(file_path=PATTERN_REQUIREMENTS_PATH)
-
     passed_cases = 0
 
+    loaded_chunks = loading_chunks(file_path=CHUNKS_PATH)
+    loaded_faiss = loading_faiss(file_path=FAISS_INDEX_PATH)
+
     for case in cases:
-        result = evaluate_case(case)
+        result = evaluate_case(
+            case=case, loaded_chunks=loaded_chunks, loaded_faiss=loaded_faiss
+        )
 
         print("\nQuestion:")
         print(result["question"])
@@ -204,6 +244,10 @@ def main():
             passed_cases += 1
         else:
             print("Overall: FAIL")
+
+            if "generation_error" in result:
+                print(f"Generation error: {result["generation_error"]}")
+
             print("\nGenerated code:")
             print(result["generated_code"])
 
