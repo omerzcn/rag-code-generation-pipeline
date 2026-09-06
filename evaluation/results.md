@@ -38,3 +38,12 @@
 - Hit@3: 86.7%
 - Hit@5: 93.3%
 
+## Experiment: Post Mission 9 retrieval - [05-09-2026 16:03]
+
+**Representation:** `current indexed chunks`
+
+- Hit@1: 20.0%
+- Hit@3: 73.3%
+- Hit@5: 80.0%
+- Total cases: 15
+

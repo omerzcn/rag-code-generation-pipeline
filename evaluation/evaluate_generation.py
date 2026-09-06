@@ -217,18 +217,37 @@ def evaluate_case(case, loaded_chunks, loaded_faiss):
         "passed": case_passed,
     }
 
-def main():
-    cases = load_evaluation_cases(file_path=PATTERN_REQUIREMENTS_PATH)
+def evaluate_generation(cases, loaded_chunks, loaded_faiss):
     passed_cases = 0
-
-    loaded_chunks = loading_chunks(file_path=CHUNKS_PATH)
-    loaded_faiss = loading_faiss(file_path=FAISS_INDEX_PATH)
+    case_results = []
 
     for case in cases:
         result = evaluate_case(
             case=case, loaded_chunks=loaded_chunks, loaded_faiss=loaded_faiss
         )
+        case_results.append(result)   
+        if result["passed"]:
+            passed_cases += 1
 
+    total_cases = len(cases)
+    failed_cases = total_cases - passed_cases
+    generation_pass_rate = passed_cases / total_cases
+
+    return {
+        "passed_cases": passed_cases,
+        "failed_cases": failed_cases,
+        "total_cases": total_cases,
+        "pass_rate": generation_pass_rate,
+        "case_results": case_results,
+    }
+
+def main():
+    cases = load_evaluation_cases(file_path=PATTERN_REQUIREMENTS_PATH)
+    loaded_chunks = loading_chunks(file_path=CHUNKS_PATH)
+    loaded_faiss = loading_faiss(file_path=FAISS_INDEX_PATH)
+
+    results = evaluate_generation(cases=cases, loaded_chunks=loaded_chunks, loaded_faiss=loaded_faiss)
+    for result in results["case_results"]:
         print("\nQuestion:")
         print(result["question"])
 
@@ -241,23 +260,19 @@ def main():
 
         if result["passed"]:
             print("Overall: PASS")
-            passed_cases += 1
         else:
             print("Overall: FAIL")
 
             if "generation_error" in result:
-                print(f"Generation error: {result["generation_error"]}")
+                print(f"Generation error: {result['generation_error']}")
 
             print("\nGenerated code:")
             print(result["generated_code"])
 
-    total_cases = len(cases)
-
-    generation_pass_rate = passed_cases / total_cases
-
-    print(
-        f"Generation Pass Rate: {str(round(generation_pass_rate * 100, 1))}%"
-    )
+    print(f"\nPassed cases: {results['passed_cases']}")
+    print(f"Failed cases: {results['failed_cases']}")
+    print(f"Total cases: {results['total_cases']}")
+    print(f"Generation Pass Rate: {results['pass_rate']:.1%}")
 
 if __name__ == "__main__":
     main()

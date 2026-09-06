@@ -58,16 +58,24 @@ def calculate_hit(questions, loaded_chunks, loaded_faiss):
     overall_hit_3 = total_hit_3 / len(questions)
     overall_hit_5 = total_hit_5 / len(questions)
 
-    return overall_hit_1, overall_hit_3, overall_hit_5
+    results = {
+        "hit_at_1": overall_hit_1,
+        "hit_at_3": overall_hit_3,
+        "hit_at_5": overall_hit_5,
+        "total_cases": len(questions),   
+    }
 
-def save_results(file_path, experiment_name, representation, hit_1, hit_3, hit_5):
+    return results
+
+def save_results(file_path, experiment_name, representation, results):
     current_time = datetime.now().strftime("%d-%m-%Y %H:%M")
     with open(file_path, "a") as file:
         file.write(f"## Experiment: {experiment_name} - [{current_time}]\n\n")
         file.write(f"**Representation:** `{representation}`\n\n")
-        file.write(f"- Hit@1: {hit_1:.1%}\n")
-        file.write(f"- Hit@3: {hit_3:.1%}\n")
-        file.write(f"- Hit@5: {hit_5:.1%}\n\n")
+        file.write(f"- Hit@1: {results['hit_at_1']:.1%}\n")
+        file.write(f"- Hit@3: {results['hit_at_3']:.1%}\n")
+        file.write(f"- Hit@5: {results['hit_at_5']:.1%}\n")
+        file.write(f"- Total cases: {results['total_cases']}\n\n")
 
 def main():
     questions = load_questions(file_path=QUESTIONS_PATH)
@@ -76,14 +84,9 @@ def main():
 
     loaded_faiss = loading_faiss(file_path=FAISS_INDEX_PATH)
 
-    overall_hit_1, overall_hit_3, overall_hit_5 = calculate_hit(questions=questions, loaded_chunks=loaded_chunks, loaded_faiss=loaded_faiss)
+    results = calculate_hit(questions=questions, loaded_chunks=loaded_chunks, loaded_faiss=loaded_faiss)
 
-    save_results(file_path=RESULT_EVALUATION_PATH, experiment_name="Double header", representation="header + header + text", hit_1=overall_hit_1, hit_3=overall_hit_3, hit_5=overall_hit_5)     
-
-    print(f"Overall Hit@1: {overall_hit_1}")
-    print(f"Overall Hit@3: {overall_hit_3}")
-    print(f"Overall Hit@5: {overall_hit_5}")
-
+    save_results(file_path=RESULT_EVALUATION_PATH, experiment_name="Post Mission 9 retrieval", representation="current indexed chunks", results=results)     
 
 if __name__ == "__main__":
     main()
