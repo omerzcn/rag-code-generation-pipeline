@@ -4,3 +4,5 @@ ollama
 dotenv
 requests
 pytest
+fastapi
+uvicorn

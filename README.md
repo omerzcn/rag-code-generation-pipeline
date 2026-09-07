@@ -37,6 +37,21 @@ pattern found?
 When a machine-readable pattern is found, its reviewed code is extracted directly rather than rewritten by the LLM.
 The LLM is used as a fallback when no suitable machine pattern is available.
 
+The RAG pipeline is exposed through a FastAPI layer.
+
+The API provides a health endpoint and a generation endpoint that accepts validated JSON requests using Pydantic
+and returns generated code as a JSON response.
+
+To run the API locally:
+
+```bash
+uvicorn api.main:app --reload
+```
+
+Interactive Swagger documentation is available at:
+
+http://127.0.0.1:8000/docs
+
 ## Key Engineering Decisions
 
 During evaluation, several failure modes were identified:
@@ -89,15 +104,24 @@ A future improvement could introduce second-stage reranking for similar patterns
 
 ## Regression Testing & CI
 
-Regression tests are implemented with pytest using two high-level safeguards:
+pytest covers retrieval/generation regression checks and FastAPI endpoint behavior.
+
+Regression safeguards:
 
 Generation pass rate >= 80%
 Retrieval Hit@5 >= 70%
 
-GitHub Actions automatically runs the tests on pushes and pull requests to the main branch.
+API tests cover:
+
+- health endpoint
+- valid generation requests
+- invalid input validation
+- internal server errors
+
+GitHub Actions automatically runs the full test suite on pushes and pull requests to the main branch.
 
 ```bash
-pytest -v tests/test_evaluation.py
+python -m pytest -v
 ```
 
 ## Tech Stack
@@ -106,7 +130,8 @@ pytest -v tests/test_evaluation.py
 - Embeddings: SentenceTransformers
 - Vector Search: FAISS
 - Local LLM: Qwen2.5-Coder:7b via Ollama
-- API Models: OpenRouter
+- External LLM API: OpenRouter
+- API Framework: FastAPI + Pydantic
 - Evaluation: Custom retrieval and generation evaluators + Python AST
 - Testing: pytest
 - CI: GitHub Actions
@@ -136,8 +161,8 @@ python3 evaluation/evaluate_retrieval.py
 python3 evaluation/evaluate_generation.py
 ```
 
-Run regression tests:
+Run tests:
 
 ```bash
-pytest -v tests/test_evaluation.py
+python -m pytest -v
 ```
