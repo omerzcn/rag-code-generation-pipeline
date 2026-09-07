@@ -135,6 +135,7 @@ python -m pytest -v
 - Evaluation: Custom retrieval and generation evaluators + Python AST
 - Testing: pytest
 - CI: GitHub Actions
+- Containerization: Docker + Docker Compose
 
 ## Setup
 
@@ -165,4 +166,43 @@ Run tests:
 
 ```bash
 python -m pytest -v
+```
+
+## Docker
+
+The application can also be run as a Docker container using Docker Compose.
+
+The Docker setup includes the FastAPI application, persisted FAISS index, retrieved chunks, and skill files.
+Runtime configuration and secrets are provided through environment variables rather than being stored in the image.
+
+Start the application:
+
+```bash
+docker compose up --build -d
+```
+
+Check the container status:
+
+```bash
+docker compose ps
+```
+
+The API is available at:
+
+http://localhost:8000
+
+Swagger documentation:
+
+http://localhost:8000/docs
+
+Stop the application:
+
+```bash
+docker compose down
+```
+
+For local LLM generation, Ollama must be running on the host with the required model available:
+
+```bash
+ollama pull qwen2.5-coder:7b
 ```

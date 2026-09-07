@@ -23,6 +23,7 @@ CHUNK_OVERLAP = 50
 MODEL_TRANSFORMER = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
 
 OLLAMA_MODEL = "qwen2.5-coder:7b"
+OLLAMA_HOST = os.getenv("OLLAMA_HOST", "http://localhost:11434")
 
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")

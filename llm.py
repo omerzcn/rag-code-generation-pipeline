@@ -1,9 +1,10 @@
-from config import OLLAMA_MODEL, OPENROUTER_URL, OPENROUTER_API_KEY, OPENROUTER_MODEL
+from config import OLLAMA_MODEL, OLLAMA_HOST, OPENROUTER_URL, OPENROUTER_API_KEY, OPENROUTER_MODEL
 import ollama
 import requests
 
 def generate_local(prompt):
-    response = ollama.chat(
+    client = ollama.Client(host=OLLAMA_HOST)
+    response = client.chat(
         model=OLLAMA_MODEL,
         messages=[
             {
