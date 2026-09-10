@@ -148,15 +148,7 @@ python -m pytest -v
 ```bash
 git clone https://github.com/omerzcn/rag-code-generation-pipeline.git
 cd rag-code-generation-pipeline
-question
-    ↓
-faiss_retriever(k=20)
-    ↓
-select_context_candidates()
-    ↓
-select_machine_pattern()
-    ↓
-pattern found?  
+
 python3 -m venv .venv
 source .venv/bin/activate
 
@@ -224,6 +216,7 @@ ollama pull qwen2.5-coder:7b
 ## Azure Deployment
 
 The containerized API is deployed on Microsoft Azure.
+A live deployment is running on Azure Container Apps.
 
 GitHub
     ↓
