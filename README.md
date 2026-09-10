@@ -4,7 +4,8 @@ A Retrieval-Augmented Generation (RAG) pipeline for generating reliable Python c
 and IoT tasks from a structured knowledge base of skill files.
 
 The project implements the main components of a RAG system from scratch, including document processing,
-chunking, embeddings, FAISS vector search, retrieval, pattern selection, evaluation, regression testing, and CI.
+chunking, embeddings, FAISS vector search, retrieval, pattern selection, evaluation, regression testing,
+containerization and CI/CD deployment.
 
 A key focus is improving the reliability of smaller local models by retrieving human-reviewed,
 machine-readable code patterns instead of relying entirely on free-form LLM code generation.
@@ -102,7 +103,7 @@ FAISS ranks a semantically similar camera_snapshot_interval pattern slightly abo
 This is kept as a known limitation rather than optimizing specifically for a 100% benchmark score.
 A future improvement could introduce second-stage reranking for similar patterns.
 
-## Regression Testing & CI
+## Regression Testing & CI/CD
 
 pytest covers retrieval/generation regression checks and FastAPI endpoint behavior.
 
@@ -120,6 +121,9 @@ API tests cover:
 
 GitHub Actions automatically runs the full test suite on pushes and pull requests to the main branch.
 
+After a successful test run on the main branch, the CD workflow builds a new Docker image,
+pushes it to Azure Container Registry, and deploys the tested commit to Azure Container Apps.
+
 ```bash
 python -m pytest -v
 ```
@@ -130,19 +134,29 @@ python -m pytest -v
 - Embeddings: SentenceTransformers
 - Vector Search: FAISS
 - Local LLM: Qwen2.5-Coder:7b via Ollama
-- External LLM API: OpenRouter
+- Cloud LLMs: Azure OpenAI, OpenRouter
 - API Framework: FastAPI + Pydantic
 - Evaluation: Custom retrieval and generation evaluators + Python AST
 - Testing: pytest
-- CI: GitHub Actions
+- CI/CD: GitHub Actions
 - Containerization: Docker + Docker Compose
+- Cloud: Microsoft Azure Container Apps + Azure Container Registry
+- Authentication: GitHub Actions -> Azure via OIDC
 
 ## Setup
 
 ```bash
 git clone https://github.com/omerzcn/rag-code-generation-pipeline.git
 cd rag-code-generation-pipeline
-
+question
+    ↓
+faiss_retriever(k=20)
+    ↓
+select_context_candidates()
+    ↓
+select_machine_pattern()
+    ↓
+pattern found?  
 python3 -m venv .venv
 source .venv/bin/activate
 
@@ -206,3 +220,22 @@ For local LLM generation, Ollama must be running on the host with the required m
 ```bash
 ollama pull qwen2.5-coder:7b
 ```
+
+## Azure Deployment
+
+The containerized API is deployed on Microsoft Azure.
+
+GitHub
+    ↓
+GitHub Actions CI/CD
+    ↓
+Azure Container Registry
+    ↓
+Azure Container Apps
+    ↓
+FastAPI + RAG Pipeline
+    ↓
+Azure OpenAI
+
+Deployment secrets are stored outside the Docker image using Azure Container Apps secrets,
+and GitHub Actions authenticates to Azure using OIDC.

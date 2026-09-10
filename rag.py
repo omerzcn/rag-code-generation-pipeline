@@ -1,6 +1,6 @@
 from config import CHUNKS_PATH, FAISS_INDEX_PATH
 from vector_store import loading_chunks, loading_faiss, faiss_retriever
-from llm import generate_local, generate_api
+from llm import generate
 
 def build_context(results):
     machine_patterns = []
@@ -114,13 +114,13 @@ def generate_rag_answer(question, loaded_chunks, loaded_faiss):
 
     prompt = build_prompt(question=question, context=context)
 
-    return generate_local(prompt)
+    return generate(prompt)
 
 def main():
     loaded_chunks = loading_chunks(file_path=CHUNKS_PATH)
     loaded_faiss = loading_faiss(file_path=FAISS_INDEX_PATH)
 
-    question = "How do I take a single distance measurement from an HC-SR04 ultrasonic sensor?"
+    question = "What does IoT mean?"
 
     answer = generate_rag_answer(question=question, loaded_chunks=loaded_chunks, loaded_faiss=loaded_faiss)
 

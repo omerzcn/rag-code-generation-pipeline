@@ -1,0 +1,54 @@
+name: Deploy to Azure Container Apps
+
+on:
+    workflow_run:
+      workflows:
+        - Tests
+      types:
+        - completed
+
+permissions:
+    id-token: write
+    contents: read
+
+jobs:
+    deploy:
+        if: >
+          github.event.workflow_run.conclusion == 'success' &&
+          github.event.workflow_run.head_branch == 'main' &&
+          github.event.workflow_run.event == 'push'
+
+        runs-on: ubuntu-latest
+    
+        steps:
+            - name: Checkout tested commit
+              uses: actions/checkout@v4
+              with:
+                ref: ${{ github.event.workflow_run.head_sha }}
+
+            - name: Azure login
+              uses: azure/login@v2
+              with:
+                client-id: ${{ secrets.AZURE_CLIENT_ID }}
+                tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+                subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+        
+            - name: Login to ACR
+              run: az acr login --name ragcodegenacr
+
+            - name: Build Docker image
+              run: |
+                docker build \
+                    -t ragcodegenacr.azurecr.io/rag-api:${{ github.sha }} \
+                    .
+            
+            - name: Push Docker image
+              run: |
+                docker push ragcodegenacr.azurecr.io/rag-api:${{ github.sha }}
+            
+            - name: Deploy to Azure Container Apps
+              run: |
+                az containerapp update \
+                    --name rag-codegen-api \
+                    -resource-group rg-rag-codegen \
+                    --image ragcodegenacr.azurecr.io/rag-api:${{ github.sha }}
