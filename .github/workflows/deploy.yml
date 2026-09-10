@@ -50,5 +50,5 @@ jobs:
               run: |
                 az containerapp update \
                     --name rag-codegen-api \
-                    -resource-group rg-rag-codegen \
+                    --resource-group rg-rag-codegen \
                     --image ragcodegenacr.azurecr.io/rag-api:${{ github.sha }}
