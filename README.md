@@ -7,8 +7,7 @@ The project implements the main components of a RAG system from scratch, includi
 chunking, embeddings, FAISS vector search, retrieval, pattern selection, evaluation, regression testing,
 containerization and CI/CD deployment.
 
-A key focus is improving the reliability of smaller local models by retrieving human-reviewed,
-machine-readable code patterns instead of relying entirely on free-form LLM code generation.
+A key focus is improving code-generation reliability by preferring human-reviewed, machine-readable code patterns over free-form LLM generation. This is especially valuable for smaller local models, which are less reliable at free-form generation, but the pattern-first approach applies to any model.
 
 ## How It Works
 
@@ -70,7 +69,10 @@ The architecture was therefore changed to:
 - deterministically extract reviewed code when a pattern is selected
 - use LLM generation as a fallback rather than the default path
 
-These changes improved generation reliability from 66.7% to 88.9% on the current evaluation set.
+These changes improved the generation pass rate to 88.9% on the original 9-case set,
+and 95.0% on the expanded 20-case set (see Evaluation).
+Separately, a chunk-representation experiment improved retrieval Hit@3 from 66.7% (header-only baseline)
+to 86.7% (double-header) on the representation-test set.
 
 ## Evaluation
 
@@ -81,10 +83,13 @@ Retrieval and final code generation are evaluated separately.
 | Retrieval Hit@1 | 20.0% |
 | Retrieval Hit@3 | 73.3% |
 | Retrieval Hit@5 | 80.0% |
-| Initial generation pass rate | 66.7% |
-| Current generation pass rate | **88.9%** |
+| Generation pass rate (9-case set) | 88.9% |
+| Generation pass rate (20-case set) | **95.0%** |
 
-The generation evaluation contains 9 representative Raspberry Pi and IoT tasks.
+The generation evaluation contains 20 Raspberry Pi and IoT tasks,
+including natural-language rephrasings of tasks the patterns already cover.
+Retrieval Hit@k is measured on a separate 15-case set.
+Generation is evaluated using Azure OpenAI (gpt-4.1-mini).
 Outputs are checked for required and forbidden code, placeholder preservation, Python code blocks,
 AST syntax validity, and project-specific rules such as avoiding f-strings.
 
@@ -102,7 +107,7 @@ Detailed evaluation experiments are available in
 | Hit@1 | 20.0% | 20.0% |
 | Hit@3 | 73.3% | 73.3% |
 | Hit@5 | 80.0% | 80.0% |
-| Generation pass rate | 88.9% | 88.9% |
+| Generation pass rate | 95.0% | 95.0% |
 | LLM fallback latency | 3.367 s | 3.123 s |
 
 LangChain reproduced the retrieval and generation quality of the custom
@@ -115,8 +120,10 @@ as a comparative implementation demonstrating framework integration.
 
 ## Known Limitation
 
-One of the 9 generation cases currently fails for an RTSP single-snapshot request.
-FAISS ranks a semantically similar camera_snapshot_interval pattern slightly above the intended snapshot pattern.
+One of the 20 generation cases currently fails: a request for a single RTSP snapshot
+is served by the semantically similar camera_snapshot_interval pattern instead of
+the intended camera_test_snapshot pattern.
+This failure is reproduced in the current 20-case evaluation run.
 
 This is kept as a known limitation rather than optimizing specifically for a 100% benchmark score.
 A future improvement could introduce second-stage reranking for similar patterns.
@@ -234,6 +241,7 @@ ollama pull qwen2.5-coder:7b
 The containerized API is deployed on Microsoft Azure.
 A live deployment is running on Azure Container Apps.
 
+```text
 GitHub
     ↓
 GitHub Actions CI/CD
@@ -245,6 +253,7 @@ Azure Container Apps
 FastAPI + RAG Pipeline
     ↓
 Azure OpenAI
+```
 
 Deployment secrets are stored outside the Docker image using Azure Container Apps secrets,
 and GitHub Actions authenticates to Azure using OIDC.

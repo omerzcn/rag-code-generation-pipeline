@@ -161,5 +161,185 @@
             "RPi.GPIO",
             "gpiozero"
         ]
+    },
+    {
+        "question": "My SW-420 vibration sensor keeps triggering, how can I tally up how many times it has fired?",
+        "expected_header": "### PATTERN: vibration_event_counter",
+        "required_code": [
+            "from gpiozero import InputDevice",
+            "from time import sleep",
+            "sensor = InputDevice({{pin}}, pull_up=None, active_state=False)"
+        ],
+        "placeholders": [
+            "{{pin}}"
+        ],
+        "forbidden_code": [
+            "RPi.GPIO"
+        ]
+    },
+    {
+        "question": "I just want one distance reading from my ultrasonic sensor, not a continuous stream, how do I get that?",
+        "expected_header": "### PATTERN: single_distance_read",
+        "required_code": [
+            "from gpiozero import DistanceSensor",
+            "from time import sleep",
+            "sensor = DistanceSensor(echo={{echo}}, trigger={{trig}}, max_distance=4)"
+        ],
+        "placeholders": [
+            "{{echo}}",
+            "{{trig}}"
+        ],
+        "forbidden_code": [
+            "RPi.GPIO"
+        ]
+    },
+    {
+        "question": "I want every PIR motion trigger written to a log file on disk, what is the setup for that?",
+        "expected_header": "### PATTERN: motion_event_file_logger",
+        "required_code": [
+            "from gpiozero import InputDevice",
+            "from time import sleep",
+            "import datetime",
+            "sensor = InputDevice({{pin}}, pull_up=None, active_state=True)"
+        ],
+        "placeholders": [
+            "{{pin}}",
+            "{{logfile}}"
+        ],
+        "forbidden_code": [
+            "RPi.GPIO"
+        ]
+    },
+    {
+        "question": "My button is wired with the internal pull-up resistor enabled, how do I keep a running tally of how many times it has been pressed?",
+        "expected_header": "### PATTERN: count_events_pullup",
+        "required_code": [
+            "from gpiozero import InputDevice",
+            "from time import sleep",
+            "sensor = InputDevice({{pin}}, pull_up=True)"
+        ],
+        "placeholders": [
+            "{{pin}}"
+        ],
+        "forbidden_code": [
+            "RPi.GPIO"
+        ]
+    },
+    {
+        "question": "How can I verify my IP camera is reachable by capturing a single test snapshot?",
+        "expected_header": "### PATTERN: camera_test_snapshot",
+        "required_code": [
+            "import cv2",
+            "RTSP_URL = \"{{rtsp_url}}\"",
+            "cap = cv2.VideoCapture(RTSP_URL)",
+            "ret, frame = cap.read()",
+            "cv2.imwrite(\"snapshot.jpg\", frame)",
+            "cap.release()"
+        ],
+        "placeholders": [
+            "{{rtsp_url}}"
+        ],
+        "forbidden_code": [
+            "RPi.GPIO"
+        ]
+    },
+    {
+        "question": "How do I make an LED blink on and off repeatedly using gpiozero?",
+        "expected_header": "### PATTERN: output_blink",
+        "required_code": [
+            "from gpiozero import OutputDevice",
+            "from time import sleep",
+            "pin = OutputDevice({{pin}}, active_high=True)"
+        ],
+        "placeholders": [
+            "{{pin}}"
+        ],
+        "forbidden_code": [
+            "RPi.GPIO"
+        ]
+    },
+    {
+        "question": "How do I set an LED to a specific brightness level using PWM?",
+        "expected_header": "### PATTERN: led_brightness",
+        "required_code": [
+            "from gpiozero import PWMLED",
+            "from time import sleep",
+            "led = PWMLED({{pin}})",
+            "led.value = 1.0"
+        ],
+        "placeholders": [
+            "{{pin}}"
+        ],
+        "forbidden_code": [
+            "RPi.GPIO"
+        ]
+    },
+    {
+        "question": "How do I play a specific tone frequency on a passive buzzer?",
+        "expected_header": "### PATTERN: buzzer_tones",
+        "required_code": [
+            "from gpiozero import TonalBuzzer",
+            "from time import sleep",
+            "buzzer = TonalBuzzer({{pin}})",
+            "buzzer.play(440)"
+        ],
+        "placeholders": [
+            "{{pin}}"
+        ],
+        "forbidden_code": [
+            "RPi.GPIO"
+        ]
+    },
+    {
+        "question": "How can I get an alert printed whenever something comes within 30 cm of my ultrasonic sensor?",
+        "expected_header": "### PATTERN: proximity_alert",
+        "required_code": [
+            "from gpiozero import DistanceSensor",
+            "from time import sleep",
+            "THRESHOLD_CM = 30.0",
+            "sensor = DistanceSensor(echo={{echo}}, trigger={{trig}}, max_distance=4)"
+        ],
+        "placeholders": [
+            "{{echo}}",
+            "{{trig}}"
+        ],
+        "forbidden_code": [
+            "RPi.GPIO"
+        ]
+    },
+    {
+        "question": "How do I measure the RPM of a spinning wheel using a slotted IR encoder sensor?",
+        "expected_header": "### PATTERN: rpm_measurement",
+        "required_code": [
+            "from gpiozero import InputDevice",
+            "from time import sleep, time",
+            "sensor = InputDevice({{pin}}, pull_up=None, active_state=False)",
+            "SEGMENTS = {{segments}}",
+            "rotations = count / SEGMENTS",
+            "rpm = rotations * 60"
+        ],
+        "placeholders": [
+            "{{pin}}",
+            "{{segments}}"
+        ],
+        "forbidden_code": [
+            "RPi.GPIO"
+        ]
+    },
+    {
+        "question": "How do I test whether my Raspberry Pi can successfully connect to an MQTT broker?",
+        "expected_header": "### PATTERN: broker_connection_test",
+        "required_code": [
+            "import paho.mqtt.client as mqtt",
+            "from time import sleep",
+            "BROKER = \"localhost\"",
+            "PORT = 1883",
+            "client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION1)"
+        ],
+        "placeholders": [],
+        "forbidden_code": [
+            "RPi.GPIO",
+            "gpiozero"
+        ]
     }
 ]

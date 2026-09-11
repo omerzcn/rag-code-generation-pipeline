@@ -38,6 +38,9 @@
 - Hit@3: 86.7%
 - Hit@5: 93.3%
 
+The runs below use the current indexed chunks and record case counts.
+Earlier runs above tested representation variants on an earlier set.
+
 ## Experiment: Post Mission 9 retrieval - [05-09-2026 16:03]
 
 **Representation:** `current indexed chunks`
@@ -74,4 +77,18 @@
 - Minimum: 0.615 s
 - Maximum: 5.837 s
 - Runs: 10
+
+## Experiment: Custom Generation Baseline - [11-09-2026 16:30]
+
+- Passed cases: 19
+- Failed cases: 1
+- Total cases: 20
+- Pass rate: 95.0%
+
+## Experiment: LangChain Generation - [11-09-2026 16:30]
+
+- Passed cases: 19
+- Failed cases: 1
+- Total cases: 20
+- Pass rate: 95.0%
 
