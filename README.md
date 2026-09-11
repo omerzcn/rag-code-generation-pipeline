@@ -92,8 +92,26 @@ An important finding was that better standalone retrieval metrics did not always
 end-to-end generation results. Retrieval metrics are therefore used as diagnostics
 alongside generation evaluation rather than as the only measure of system quality.
 
-Detailed retrieval experiments are available in
+Detailed evaluation experiments are available in
 [evaluation/results.md](evaluation/results.md).
+
+### Custom Pipeline vs. LangChain
+
+| Metric | Custom | LangChain |
+|---|---:|---:|
+| Hit@1 | 20.0% | 20.0% |
+| Hit@3 | 73.3% | 73.3% |
+| Hit@5 | 80.0% | 80.0% |
+| Generation pass rate | 88.9% | 88.9% |
+| LLM fallback latency | 3.367 s | 3.123 s |
+
+LangChain reproduced the retrieval and generation quality of the custom
+pipeline while providing cleaner composition through LCEL. However, it also
+introduced additional framework dependencies and abstraction overhead.
+
+The custom pipeline remains the primary implementation because it is small,
+deterministic, and directly debuggable. The LangChain implementation is kept
+as a comparative implementation demonstrating framework integration.
 
 ## Known Limitation
 
@@ -124,15 +142,12 @@ GitHub Actions automatically runs the full test suite on pushes and pull request
 After a successful test run on the main branch, the CD workflow builds a new Docker image,
 pushes it to Azure Container Registry, and deploys the tested commit to Azure Container Apps.
 
-```bash
-python -m pytest -v
-```
-
 ## Tech Stack
 
 - Language: Python
 - Embeddings: SentenceTransformers
 - Vector Search: FAISS
+- RAG Framework Comparison: LangChain + LCEL
 - Local LLM: Qwen2.5-Coder:7b via Ollama
 - Cloud LLMs: Azure OpenAI, OpenRouter
 - API Framework: FastAPI + Pydantic
@@ -166,6 +181,7 @@ Run the evaluations:
 ```bash
 python3 evaluation/evaluate_retrieval.py
 python3 evaluation/evaluate_generation.py
+python3 evaluation/evaluate_latency.py
 ```
 
 Run tests:

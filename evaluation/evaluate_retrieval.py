@@ -4,8 +4,10 @@ import json
 from datetime import datetime
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))
-from config import QUESTIONS_PATH, CHUNKS_PATH, FAISS_INDEX_PATH, RESULT_EVALUATION_PATH
+from config import QUESTIONS_PATH, CHUNKS_PATH, FAISS_INDEX_PATH, RESULT_EVALUATION_PATH, MODEL_TRANSFORMER
 from vector_store import loading_chunks, loading_faiss, faiss_retriever
+from langchain_pipeline.retriever import chunks_to_documents, SentenceTransformerEmbeddings, langchain_retriever
+from langchain_community.vectorstores import FAISS
 
 def load_questions(file_path):
     try:
@@ -14,7 +16,7 @@ def load_questions(file_path):
     except FileNotFoundError as e:
         raise FileNotFoundError(f"Questions file Not Found: {e}")
 
-def calculate_hit(questions, loaded_chunks, loaded_faiss):
+def calculate_hit(questions, retriever):
     total_hit_1 = 0
     total_hit_3 = 0
     total_hit_5 = 0
@@ -22,8 +24,8 @@ def calculate_hit(questions, loaded_chunks, loaded_faiss):
     for test_case in questions:
         question_query = test_case["question"]
         expected_header = test_case["expected_header"]
-    
-        retrieve = faiss_retriever(chunks=loaded_chunks, faiss_index=loaded_faiss, question=question_query, k=5)
+
+        retrieve = retriever(question_query, k=5)    
     
         retrieved_headers = []
         for r in retrieve:
@@ -81,12 +83,46 @@ def main():
     questions = load_questions(file_path=QUESTIONS_PATH)
 
     loaded_chunks = loading_chunks(file_path=CHUNKS_PATH)
-
     loaded_faiss = loading_faiss(file_path=FAISS_INDEX_PATH)
 
-    results = calculate_hit(questions=questions, loaded_chunks=loaded_chunks, loaded_faiss=loaded_faiss)
+    documents = chunks_to_documents(loaded_chunks)
 
-    save_results(file_path=RESULT_EVALUATION_PATH, experiment_name="Post Mission 9 retrieval", representation="current indexed chunks", results=results)     
+    embeddings = SentenceTransformerEmbeddings(
+        model=MODEL_TRANSFORMER
+    )
+
+    vector_store = FAISS.from_documents(
+        documents=documents,
+        embedding=embeddings,
+    )
+
+    def custom_retriever(question, k: int = 5):
+        return faiss_retriever(
+            chunks=loaded_chunks, faiss_index=loaded_faiss, question=question, k=k
+        )
+
+
+    def lc_retriever(question, k: int = 5):
+        return langchain_retriever(
+            vector_store=vector_store, question=question, k=k
+        )
+
+    custom_result = calculate_hit(questions=questions, retriever=custom_retriever)
+    langchain_result = calculate_hit(questions=questions, retriever=lc_retriever)
+
+    save_results(
+        file_path=RESULT_EVALUATION_PATH,
+        experiment_name="Custom Retrieval Baseline",
+        representation="Custom FAISS IndexFlatIP with normalized SentenceTransformer",
+        results=custom_result,
+    )
+
+    save_results(
+        file_path=RESULT_EVALUATION_PATH,
+        experiment_name="LangChain Retrieval",
+        representation="LangChain FAISS with normalized SentenceTransformer",
+        results=langchain_result,
+    )
 
 if __name__ == "__main__":
     main()

@@ -2,13 +2,16 @@ import sys
 from pathlib import Path
 import json
 import ast
+from datetime import datetime
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))
-from config import PATTERN_REQUIREMENTS_PATH, CHUNKS_PATH, FAISS_INDEX_PATH
+from config import PATTERN_REQUIREMENTS_PATH, CHUNKS_PATH, FAISS_INDEX_PATH, MODEL_TRANSFORMER, RESULT_EVALUATION_PATH
 
 from vector_store import loading_chunks, loading_faiss
-
 from rag import generate_rag_answer
+from langchain_pipeline.rag_chain import generate_langchain_rag_answer, build_lcel_chain
+from langchain_pipeline.retriever import chunks_to_documents, SentenceTransformerEmbeddings
+from langchain_community.vectorstores import FAISS
 
 def check_required_code(generated_code, required_code):
     missing = []
@@ -128,11 +131,9 @@ def check_code_block(code):
         "reason": None,
     }
 
-def evaluate_case(case, loaded_chunks, loaded_faiss):
+def evaluate_case(case, generator):
     try:
-        generated_code = generate_rag_answer(
-            question=case["question"], loaded_chunks=loaded_chunks, loaded_faiss=loaded_faiss,
-        )
+        generated_code = generator(case["question"])
     except Exception as e:
         return {
             "question": case["question"],
@@ -217,13 +218,13 @@ def evaluate_case(case, loaded_chunks, loaded_faiss):
         "passed": case_passed,
     }
 
-def evaluate_generation(cases, loaded_chunks, loaded_faiss):
+def evaluate_generation(cases, generator):
     passed_cases = 0
     case_results = []
 
     for case in cases:
         result = evaluate_case(
-            case=case, loaded_chunks=loaded_chunks, loaded_faiss=loaded_faiss
+            case=case, generator=generator
         )
         case_results.append(result)   
         if result["passed"]:
@@ -241,38 +242,68 @@ def evaluate_generation(cases, loaded_chunks, loaded_faiss):
         "case_results": case_results,
     }
 
-def main():
-    cases = load_evaluation_cases(file_path=PATTERN_REQUIREMENTS_PATH)
-    loaded_chunks = loading_chunks(file_path=CHUNKS_PATH)
-    loaded_faiss = loading_faiss(file_path=FAISS_INDEX_PATH)
-
-    results = evaluate_generation(cases=cases, loaded_chunks=loaded_chunks, loaded_faiss=loaded_faiss)
+def print_failed_cases(results):
     for result in results["case_results"]:
-        print("\nQuestion:")
-        print(result["question"])
-
-        print("Required:", result["required_check"])
-        print("Forbidden:", result["forbidden_check"])
-        print("Placeholders:", result["placeholder_check"])
-        print("Code block:", result["code_block_check"])
-        print("Syntax:", result["syntax_check"])
-        print("F-strings:", result["f_string_check"])
-
-        if result["passed"]:
-            print("Overall: PASS")
-        else:
-            print("Overall: FAIL")
-
-            if "generation_error" in result:
-                print(f"Generation error: {result['generation_error']}")
-
+        if not result["passed"]:
+            print("\nQuestion:")
+            print(result["question"])
+            print("Required:", result["required_check"])
+            print("Forbidden:", result["forbidden_check"])
+            print("Placeholders:", result["placeholder_check"])
+            print("Code block:", result["code_block_check"])
+            print("Syntax:", result["syntax_check"])
+            print("F-strings:", result["f_string_check"])
             print("\nGenerated code:")
             print(result["generated_code"])
 
-    print(f"\nPassed cases: {results['passed_cases']}")
-    print(f"Failed cases: {results['failed_cases']}")
-    print(f"Total cases: {results['total_cases']}")
-    print(f"Generation Pass Rate: {results['pass_rate']:.1%}")
+def save_generation_results(file_path, experiment_name, results):
+    current_time = datetime.now().strftime("%d-%m-%Y %H:%M")
+    with open(file_path, "a") as file:
+        file.write(f"## Experiment: {experiment_name} - [{current_time}]\n\n")
+        file.write(f"- Passed cases: {results['passed_cases']}\n")
+        file.write(f"- Failed cases: {results['failed_cases']}\n")
+        file.write(f"- Total cases: {results['total_cases']}\n")
+        file.write(f"- Pass rate: {results['pass_rate']:.1%}\n\n")
+
+def main():
+    cases = load_evaluation_cases(file_path=PATTERN_REQUIREMENTS_PATH)
+
+    loaded_chunks = loading_chunks(file_path=CHUNKS_PATH)
+    loaded_faiss = loading_faiss(file_path=FAISS_INDEX_PATH)
+
+    documents = chunks_to_documents(chunks=loaded_chunks)
+    embeddings = SentenceTransformerEmbeddings(model=MODEL_TRANSFORMER)
+    vector_store = FAISS.from_documents(
+        documents=documents, embedding=embeddings,
+    )
+    chain = build_lcel_chain()
+
+    def custom_generator(question):
+        return generate_rag_answer(
+            question=question, loaded_chunks=loaded_chunks, loaded_faiss=loaded_faiss,
+        )
+
+    def lc_generator(question):
+        return generate_langchain_rag_answer(
+            vector_store=vector_store, question=question, chain=chain,
+        )
+
+    custom_results = evaluate_generation(cases=cases, generator=custom_generator)
+    langchain_results = evaluate_generation(cases=cases, generator=lc_generator)
+
+    print("\n## CUSTOM FAILURES")
+    print_failed_cases(results=custom_results)
+
+    print("\n## LANGCHAIN FAILURES")
+    print_failed_cases(results=langchain_results)
+
+    save_generation_results(
+        file_path=RESULT_EVALUATION_PATH, experiment_name="Custom Generation Baseline", results=custom_results,
+    )
+
+    save_generation_results(
+        file_path=RESULT_EVALUATION_PATH, experiment_name="LangChain Generation", results=langchain_results
+    )
 
 if __name__ == "__main__":
     main()

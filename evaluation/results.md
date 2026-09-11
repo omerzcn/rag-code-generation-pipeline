@@ -47,3 +47,31 @@
 - Hit@5: 80.0%
 - Total cases: 15
 
+## Experiment: Custom Generation Baseline - [11-09-2026 14:05]
+
+- Passed cases: 8
+- Failed cases: 1
+- Total cases: 9
+- Pass rate: 88.9%
+
+## Experiment: LangChain Generation - [11-09-2026 14:05]
+
+- Passed cases: 8
+- Failed cases: 1
+- Total cases: 9
+- Pass rate: 88.9%
+
+## Experiment: LLM Fallback End-to-End Latency - [11-09-2026 14:42]
+
+### Custom
+- Average: 3.367 s
+- Minimum: 0.992 s
+- Maximum: 6.558 s
+- Runs: 10
+
+### LangChain
+- Average: 3.123 s
+- Minimum: 0.615 s
+- Maximum: 5.837 s
+- Runs: 10
+
